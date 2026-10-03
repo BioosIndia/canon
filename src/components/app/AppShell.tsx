@@ -328,12 +328,16 @@ export const AppShell: React.FC<AppShellProps> = ({
                 onOpenAiSummarizer={handleOpenAiSummarizer}
               />
             )}
-            {activeTab === 'signals' && <SignalIntake />}
+            {activeTab === 'signals' && (
+              <SignalIntake onOpenAiSummarizer={handleOpenAiSummarizer} />
+            )}
             {activeTab === 'impact' && <ImpactGraph />}
             {activeTab === 'reviews' && (
               <HumanReviewQueue onOpenAiSummarizer={handleOpenAiSummarizer} />
             )}
-            {activeTab === 'tasks' && <ImplementationTracker />}
+            {activeTab === 'tasks' && (
+              <ImplementationTracker onOpenAiSummarizer={handleOpenAiSummarizer} />
+            )}
             {activeTab === 'structured' && <StructuredWorkbench />}
             {activeTab === 'provenance' && <ProvenanceReplay />}
             {activeTab === 'gemini' && <GeminiChatbot />}

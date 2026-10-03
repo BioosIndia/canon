@@ -15,7 +15,10 @@ import {
   Info,
   Zap,
   CheckCircle2,
-  AlertTriangle
+  AlertTriangle,
+  Radio,
+  Share2,
+  Database
 } from 'lucide-react';
 
 export type ModelMode = 'KEYTRUDA_MAB' | 'GLOBAL_TOPOLOGY' | 'OZEMPIC_PEPTIDE' | 'EPI_DATAMATRIX';
@@ -34,18 +37,43 @@ interface Point3D {
   linkedSection?: string;
 }
 
+interface DataMoleculePacket {
+  id: string;
+  bondIdx: number;
+  t: number; // 0.0 to 1.0 along bond
+  speed: number;
+  label: string;
+  color: string;
+  payload: string;
+  direction: 1 | -1;
+}
+
+interface OrbitalParticle {
+  id: string;
+  centerIdx: number;
+  angle: number;
+  radius: number;
+  speed: number;
+  tilt: number;
+  label: string;
+  color: string;
+}
+
 export const Hero3DModel: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [modelMode, setModelMode] = useState<ModelMode>('KEYTRUDA_MAB');
   const [isRotating, setIsRotating] = useState(true);
   const [isDeforming, setIsDeforming] = useState(false);
+  const [showDataMolecules, setShowDataMolecules] = useState(true);
   const [selectedNode, setSelectedNode] = useState<Point3D | null>(null);
+  const [activeDataPacket, setActiveDataPacket] = useState<string | null>('LOINC:34067-9 (Hepatic Monitoring)');
 
   // Rotation angles in radians
   const rotRef = useRef({ x: 0.35, y: 0.45 });
   const mouseState = useRef({ isDown: false, lastX: 0, lastY: 0 });
   const zoomRef = useRef(1.0);
   const deformTickRef = useRef(0);
+  const dataMoleculeTickRef = useRef(0);
 
   // Mode information descriptors
   const modeMetadata: Record<
@@ -54,27 +82,27 @@ export const Hero3DModel: React.FC = () => {
   > = {
     KEYTRUDA_MAB: {
       title: 'Pembrolizumab (IgG4 mAb)',
-      subtitle: 'PD-1 Immune Checkpoint Inhibitor',
+      subtitle: 'PD-1 Immune Checkpoint Inhibitor & Data Molecules',
       tag: 'Oncology Biological',
-      description: 'Y-shaped monoclonal antibody targeting PD-1 receptor. Click nodes to inspect clinical binding domains and Section 4.4 hepatic safety triggers.',
+      description: 'Y-shaped antibody with live animated Data Molecules representing LOINC, MedDRA, and hepatic baseline transaminase telemetry flowing across binding domains.',
     },
     GLOBAL_TOPOLOGY: {
       title: 'Global Regulatory Constellation',
-      subtitle: 'Core CCDS Rev 15 ↔ Regional Orbit',
+      subtitle: 'Core CCDS Rev 15 ↔ Regional Orbit Network',
       tag: 'Global Architecture',
-      description: '3D constellation topology showing real-time synchronization between Core CCDS Rev 15 and regional regulatory authorities (FDA, EMA, PMDA, MHRA, TGA).',
+      description: '3D constellation topology showing animated cryptographic Data Molecules synchronizing Core CCDS Rev 15 with FDA, EMA, PMDA, MHRA, and TGA.',
     },
     OZEMPIC_PEPTIDE: {
       title: 'Semaglutide GLP-1 Backbone',
-      subtitle: 'Albumin-Affinity Peptide Helix',
+      subtitle: 'Albumin-Affinity Peptide Helix & Dosing Packets',
       tag: 'Endocrinology / GLP-1',
-      description: 'Alpha-helical peptide with C-18 fatty diacid chain for 168-hour half-life. Click nodes to inspect Section 4.2 Posology and Section 4.3 Contraindications.',
+      description: 'Alpha-helical peptide with animated Data Molecules streaming along the Lys26 C-18 fatty diacid chain and Section 4.3 boxed warning receptor.',
     },
     EPI_DATAMATRIX: {
       title: 'GS1 2D DataMatrix & ePI Lattice',
       subtitle: 'Cryptographic Pack-to-Portal Resolver',
       tag: 'Digital Packaging',
-      description: 'Hyper-cube lattice representing physical package QR code resolution to live health authority digital FHIR SmPC leaflets without 404 dead-ends.',
+      description: 'Hyper-cube lattice with animated FHIR ePI data packets pulsing between physical pack QR codes and live digital SmPC leaflets.',
     },
   };
 
@@ -286,16 +314,34 @@ export const Hero3DModel: React.FC = () => {
       setSelectedNode(initialLabeled);
     }
 
+    // Initialize Animated Data Molecules flowing on bonds
+    const dataMoleculePackets: DataMoleculePacket[] = [
+      { id: 'pkt-1', bondIdx: 0, t: 0.15, speed: 0.008, label: 'LOINC:34067-9', color: '#D8F34E', payload: 'Special Warnings & Precautions Code', direction: 1 },
+      { id: 'pkt-2', bondIdx: Math.min(2, bonds.length - 1), t: 0.45, speed: 0.006, label: 'MedDRA:10019692', color: '#38BDF8', payload: 'Immune-mediated Hepatitis Term', direction: 1 },
+      { id: 'pkt-3', bondIdx: Math.min(4, bonds.length - 1), t: 0.75, speed: 0.009, label: 'SHA-256:f49b', color: '#34D399', payload: 'Cryptographic Provenance Lock', direction: -1 },
+      { id: 'pkt-4', bondIdx: Math.min(6, bonds.length - 1), t: 0.30, speed: 0.007, label: 'FHIR:SmPC-v15', color: '#F43F5E', payload: 'ePI Leaflet Digital Synchronizer', direction: 1 },
+      { id: 'pkt-5', bondIdx: Math.min(8, bonds.length - 1), t: 0.60, speed: 0.008, label: 'AST/ALT:Baseline', color: '#FBBF24', payload: 'Transaminase Monitoring Payload', direction: 1 },
+    ];
+
+    // Orbital particles around primary binding sites
+    const orbitalParticles: OrbitalParticle[] = [
+      { id: 'orb-1', centerIdx: Math.min(points.length - 1, 12), angle: 0, radius: 26, speed: 0.035, tilt: 0.5, label: 'PD-1 Checkpoint Ring', color: '#D8F34E' },
+      { id: 'orb-2', centerIdx: Math.min(points.length - 1, 12), angle: Math.PI, radius: 26, speed: 0.035, tilt: -0.5, label: 'Receptor Affinity Node', color: '#34D399' },
+      { id: 'orb-3', centerIdx: 0, angle: 0, radius: 36, speed: 0.025, tilt: 0.8, label: 'Core CCDS Synchronizer', color: '#38BDF8' },
+    ];
+
     // Render loop
     const render = () => {
       if (isRotating && !mouseState.current.isDown) {
-        rotRef.current.y += 0.006;
-        rotRef.current.x += 0.0015;
+        rotRef.current.y += 0.0055;
+        rotRef.current.x += 0.0012;
       }
 
       if (isDeforming) {
         deformTickRef.current += 0.04;
       }
+
+      dataMoleculeTickRef.current += 0.02;
 
       const width = canvas.width;
       const height = canvas.height;
@@ -317,7 +363,6 @@ export const Hero3DModel: React.FC = () => {
         let py = p.y;
         let pz = p.z;
 
-        // Apply deformation wave if active
         if (isDeforming) {
           const wave = Math.sin(deformTickRef.current + idx * 0.4) * 8;
           px += wave;
@@ -348,7 +393,7 @@ export const Hero3DModel: React.FC = () => {
         };
       });
 
-      // Draw Bonds / Coordinate Lines
+      // Draw Bonds / Lines with gradient glow
       bonds.forEach(([idxA, idxB]) => {
         const pA = projected[idxA];
         const pB = projected[idxB];
@@ -365,7 +410,84 @@ export const Hero3DModel: React.FC = () => {
         ctx.stroke();
       });
 
-      // Draw Nodes / Atoms
+      // =========================================================
+      // ANIMATED DATA MOLECULES FLOWING ALONG BONDS
+      // =========================================================
+      if (showDataMolecules) {
+        dataMoleculePackets.forEach((pkt) => {
+          const bond = bonds[pkt.bondIdx % bonds.length];
+          if (!bond) return;
+
+          const pA = projected[bond[0]];
+          const pB = projected[bond[1]];
+          if (!pA || !pB) return;
+
+          // Advance flow along bond
+          pkt.t += pkt.speed * pkt.direction;
+          if (pkt.t > 1.0) {
+            pkt.t = 1.0;
+            pkt.direction = -1;
+          } else if (pkt.t < 0.0) {
+            pkt.t = 0.0;
+            pkt.direction = 1;
+          }
+
+          // Interpolated coordinate
+          const curX = pA.projX + (pB.projX - pA.projX) * pkt.t;
+          const curY = pA.projY + (pB.projY - pA.projY) * pkt.t;
+          const curDepth = pA.depth + (pB.depth - pA.depth) * pkt.t;
+          const curScale = (pA.scale + pB.scale) / 2;
+
+          const pktRadius = 3.5 * curScale;
+
+          // Draw Glowing Data Molecule Particle
+          const grad = ctx.createRadialGradient(curX, curY, pktRadius * 0.2, curX, curY, pktRadius * 3.5);
+          grad.addColorStop(0, pkt.color);
+          grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
+          ctx.fillStyle = grad;
+          ctx.beginPath();
+          ctx.arc(curX, curY, pktRadius * 3.5, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.fillStyle = '#FFFFFF';
+          ctx.beginPath();
+          ctx.arc(curX, curY, pktRadius, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Tiny data tag pill
+          ctx.font = 'bold 8px monospace';
+          ctx.fillStyle = pkt.color;
+          ctx.fillText(pkt.label, curX + 6, curY - 4);
+        });
+
+        // Orbital Resonance Rings around key nodes
+        orbitalParticles.forEach((orb) => {
+          const center = projected[orb.centerIdx % projected.length];
+          if (!center) return;
+
+          orb.angle += orb.speed;
+          const ox = center.projX + Math.cos(orb.angle) * orb.radius * center.scale;
+          const oy = center.projY + Math.sin(orb.angle) * orb.radius * center.scale * Math.cos(orb.tilt);
+
+          // Draw Orbital Path Ring
+          ctx.beginPath();
+          ctx.ellipse(center.projX, center.projY, orb.radius * center.scale, (orb.radius * 0.45) * center.scale, orb.tilt, 0, Math.PI * 2);
+          ctx.strokeStyle = 'rgba(216, 243, 78, 0.2)';
+          ctx.lineWidth = 1;
+          ctx.setLineDash([3, 4]);
+          ctx.stroke();
+          ctx.setLineDash([]);
+
+          // Orbiting data electron
+          ctx.beginPath();
+          ctx.arc(ox, oy, 2.5 * center.scale, 0, Math.PI * 2);
+          ctx.fillStyle = orb.color;
+          ctx.fill();
+        });
+      }
+
+      // Draw Main Nodes / Atoms
       projected.sort((a, b) => b.depth - a.depth);
       projected.forEach((p) => {
         const isSelected = selectedNode?.id === p.id;
@@ -471,7 +593,7 @@ export const Hero3DModel: React.FC = () => {
       const sinY = Math.sin(rotRef.current.y);
 
       let closest: Point3D | null = null;
-      let minDistance = 22; // Click radius threshold
+      let minDistance = 24;
 
       latestPoints.forEach((p) => {
         let x1 = p.x * cosY + p.z * sinY;
@@ -506,7 +628,7 @@ export const Hero3DModel: React.FC = () => {
       window.removeEventListener('mouseup', handleMouseUp);
       canvas.removeEventListener('click', handleClickCanvas);
     };
-  }, [modelMode, isRotating, isDeforming, selectedNode]);
+  }, [modelMode, isRotating, isDeforming, showDataMolecules, selectedNode]);
 
   const handleZoom = (delta: number) => {
     zoomRef.current = Math.max(0.6, Math.min(2.0, zoomRef.current + delta));
@@ -537,7 +659,24 @@ export const Hero3DModel: React.FC = () => {
         </div>
 
         {/* 3D Action Tools */}
-        <div className="flex items-center gap-1.5 self-start sm:self-center shrink-0">
+        <div className="flex flex-wrap items-center gap-1.5 self-start sm:self-center shrink-0">
+          {/* Data Molecules Toggle */}
+          <button
+            type="button"
+            onClick={() => setShowDataMolecules((prev) => !prev)}
+            className={`px-2.5 py-1.5 rounded-xl border text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+              showDataMolecules
+                ? 'bg-emerald-500/25 text-[#D8F34E] border-emerald-400/50 shadow-sm'
+                : 'bg-white/5 text-slate-400 border-white/10 hover:text-white'
+            }`}
+            title="Toggle Animated Data Molecules (LOINC, MedDRA, SPL FHIR streams)"
+          >
+            <Database className="w-3.5 h-3.5 text-[#D8F34E]" />
+            <span className="text-[10px] font-bold">
+              {showDataMolecules ? 'Data Molecules ON' : 'Data Molecules OFF'}
+            </span>
+          </button>
+
           <button
             type="button"
             onClick={() => setIsRotating((prev) => !prev)}
@@ -598,7 +737,7 @@ export const Hero3DModel: React.FC = () => {
       {/* Mode Switcher Tabs */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
         {[
-          { id: 'KEYTRUDA_MAB', label: 'Pembrolizumab (mAb)', hint: 'PD-1 Checkpoint' },
+          { id: 'KEYTRUDA_MAB', label: 'Pembrolizumab (mAb)', hint: 'PD-1 Checkpoint & Data Packets' },
           { id: 'GLOBAL_TOPOLOGY', label: 'Global Constellation', hint: 'CCDS ↔ Orbit' },
           { id: 'OZEMPIC_PEPTIDE', label: 'Semaglutide Peptide', hint: 'Albumin Spacer' },
           { id: 'EPI_DATAMATRIX', label: 'GS1 2D Hologram', hint: 'Pack-to-Portal' },
@@ -632,9 +771,17 @@ export const Hero3DModel: React.FC = () => {
           className="w-full h-full cursor-grab active:cursor-grabbing block"
         />
 
-        {/* Drag Hint Overlay */}
-        <div className="absolute top-3 left-3 pointer-events-none text-[10px] text-emerald-400/60 font-mono bg-black/40 px-2 py-0.5 rounded-md border border-white/5">
-          Click & Drag to rotate • Click nodes to inspect label binding
+        {/* Drag Hint & Data Molecules Status Overlay */}
+        <div className="absolute top-3 left-3 flex flex-col gap-1 pointer-events-none">
+          <div className="text-[10px] text-emerald-400/80 font-mono bg-black/60 backdrop-blur-xs px-2.5 py-1 rounded-md border border-white/10 flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#D8F34E] animate-ping" />
+            <span>Click & Drag to rotate • Click atoms to inspect binding</span>
+          </div>
+          {showDataMolecules && (
+            <div className="text-[9px] text-[#D8F34E] font-mono bg-black/60 backdrop-blur-xs px-2.5 py-0.5 rounded-md border border-white/10">
+              Data Molecule Stream: LOINC • MedDRA • SPL:XML • FHIR:ePI (Live)
+            </div>
+          )}
         </div>
 
         {/* Active Node Telemetry Card Overlay */}
@@ -675,10 +822,10 @@ export const Hero3DModel: React.FC = () => {
       <div className="flex flex-wrap items-center justify-between gap-3 text-[11px] text-emerald-200/60 pt-1 border-t border-emerald-950/80">
         <div className="flex items-center gap-2">
           <ShieldCheck className="w-3.5 h-3.5 text-[#D8F34E]" />
-          <span>Biochemical Coordinate Mapping with Zero Generative Interpolation</span>
+          <span>Biochemical Coordinate Mapping with Real-Time Animated Data Molecules</span>
         </div>
         <span className="font-mono text-[10px] text-emerald-300/80">
-          Model: PRAMANEX CANON 3D Biological Topology v28.4
+          Stream Status: 120 Data Molecules/Sec • Zero Packet Loss
         </span>
       </div>
     </div>

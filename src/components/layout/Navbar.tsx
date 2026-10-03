@@ -2,7 +2,6 @@ import React from 'react';
 import { ShieldCheck, ArrowRight, Terminal, User, Lock, LogOut } from 'lucide-react';
 import { UserProfile } from '../../types/canon';
 import { NotificationCenter } from './NotificationCenter';
-import { GlobalSearchBar } from './GlobalSearchBar';
 
 interface NavbarProps {
   currentView: string;
@@ -70,61 +69,47 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
         </div>
 
-        {/* Global Search Bar (Center-Left) */}
-        <div className="hidden md:block">
-          <GlobalSearchBar
-            isDarkTheme={true}
-            onSelectResult={(tab) => {
-              if (onSelectSearchTab) {
-                onSelectSearchTab(tab);
-              } else {
-                onLaunchApp();
-              }
-            }}
-          />
-        </div>
-
         {/* Desktop Smooth-Scroll In-Page Menu */}
-        <nav className="hidden xl:flex items-center gap-1 bg-white/5 border border-white/10 px-3 py-1.5 rounded-full backdrop-blur-sm text-xs font-medium text-emerald-100/90">
+        <nav className="hidden lg:flex items-center gap-1 bg-white/5 border border-white/10 px-3 py-1.5 rounded-full backdrop-blur-sm text-xs font-medium text-emerald-100/90">
           <button
             onClick={() => handleScrollToSection('hero')}
-            className="px-2.5 py-1 rounded-full hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
+            className="px-3 py-1 rounded-full hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
           >
             Overview
           </button>
           <button
             onClick={() => handleScrollToSection('comparison')}
-            className="px-2.5 py-1 rounded-full hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
+            className="px-3 py-1 rounded-full hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
           >
             Comparison
           </button>
           <button
+            onClick={() => handleScrollToSection('different')}
+            className="px-3 py-1 rounded-full hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
+          >
+            Differentiators
+          </button>
+          <button
+            onClick={() => handleScrollToSection('commercial')}
+            className="px-3 py-1 rounded-full hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
+          >
+            Enterprise Suite
+          </button>
+          <button
+            onClick={() => handleScrollToSection('architecture')}
+            className="px-3 py-1 rounded-full hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
+          >
+            GxP Audit & Architecture
+          </button>
+          <button
             onClick={() => handleScrollToSection('features')}
-            className="px-2.5 py-1 rounded-full hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
+            className="px-3 py-1 rounded-full hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
           >
             Capabilities
           </button>
           <button
-            onClick={() => handleScrollToSection('structured-epi')}
-            className="px-2.5 py-1 rounded-full hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
-          >
-            SPL / ePI
-          </button>
-          <button
-            onClick={() => handleScrollToSection('governance')}
-            className="px-2.5 py-1 rounded-full hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
-          >
-            Governance
-          </button>
-          <button
-            onClick={() => handleScrollToSection('workflow')}
-            className="px-2.5 py-1 rounded-full hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
-          >
-            Lineage
-          </button>
-          <button
             onClick={() => onNavigate('pricing')}
-            className="px-2.5 py-1 rounded-full hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
+            className="px-3 py-1 rounded-full hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
           >
             Pricing
           </button>

@@ -7,12 +7,17 @@ import {
   Calendar,
   ExternalLink,
   Plus,
-  Filter
+  Filter,
+  Sparkles
 } from 'lucide-react';
 import { MOCK_SIGNALS } from '../../data/mockData';
 import { RegulatorySignal } from '../../types/canon';
 
-export const SignalIntake: React.FC = () => {
+interface SignalIntakeProps {
+  onOpenAiSummarizer?: (title: string, text: string) => void;
+}
+
+export const SignalIntake: React.FC<SignalIntakeProps> = ({ onOpenAiSummarizer }) => {
   const [signals, setSignals] = useState<RegulatorySignal[]>(MOCK_SIGNALS);
   const [selectedSignal, setSelectedSignal] = useState<RegulatorySignal>(MOCK_SIGNALS[0]);
   const [converted, setConverted] = useState(false);
@@ -133,18 +138,35 @@ export const SignalIntake: React.FC = () => {
               CCDS and affiliate labels.
             </p>
 
-            <div className="pt-2 flex items-center justify-between">
+            <div className="pt-2 flex flex-wrap items-center justify-between gap-3">
               <span className="text-xs text-slate-400 font-mono">
                 Linked Candidate: {selectedSignal.linkedChangeCandidateId || 'None (New)'}
               </span>
 
-              <button
-                onClick={handleConvertToProposal}
-                className="px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-md transition-all flex items-center gap-2 cursor-pointer"
-              >
-                <ArrowRight className="w-4 h-4 text-emerald-400" />
-                Convert to Evidence Change Packet
-              </button>
+              <div className="flex items-center gap-2">
+                {onOpenAiSummarizer && (
+                  <button
+                    onClick={() =>
+                      onOpenAiSummarizer(
+                        `Safety Signal: ${selectedSignal.signalTitle}`,
+                        `Substance: ${selectedSignal.activeSubstance}\nUrgency: ${selectedSignal.urgencyLevel}\nDetected Date: ${selectedSignal.detectedDate}\n\nClinical Summary:\n${selectedSignal.clinicalSummary}`
+                      )
+                    }
+                    className="px-3.5 py-2.5 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold text-xs border border-purple-200 transition-colors flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <Sparkles className="w-3.5 h-3.5" />
+                    Summarize with AI
+                  </button>
+                )}
+
+                <button
+                  onClick={handleConvertToProposal}
+                  className="px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-md transition-all flex items-center gap-2 cursor-pointer"
+                >
+                  <ArrowRight className="w-4 h-4 text-emerald-400" />
+                  Convert to Evidence Change Packet
+                </button>
+              </div>
             </div>
 
             {converted && (

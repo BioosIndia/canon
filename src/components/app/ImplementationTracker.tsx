@@ -14,8 +14,13 @@ import {
 import { MOCK_TASKS } from '../../data/mockData';
 import { ImplementationTask, ImplementationStatus, ProofAttachment } from '../../types/canon';
 import { calculateSha256 } from '../../utils/diffEngine';
+import { Sparkles } from 'lucide-react';
 
-export const ImplementationTracker: React.FC = () => {
+interface ImplementationTrackerProps {
+  onOpenAiSummarizer?: (title: string, text: string) => void;
+}
+
+export const ImplementationTracker: React.FC<ImplementationTrackerProps> = ({ onOpenAiSummarizer }) => {
   const [tasks, setTasks] = useState<ImplementationTask[]>(MOCK_TASKS);
   const [selectedTask, setSelectedTask] = useState<ImplementationTask>(MOCK_TASKS[0]);
 
@@ -180,9 +185,25 @@ export const ImplementationTracker: React.FC = () => {
               <h2 className="text-lg font-bold text-slate-900 mt-1">{selectedTask.taskTitle}</h2>
               <p className="text-xs text-slate-600 mt-1">{selectedTask.changeDescription}</p>
             </div>
-            <span className="px-3 py-1 rounded-full text-xs font-extrabold bg-slate-100 text-slate-800">
-              Due: {selectedTask.dueDate}
-            </span>
+            <div className="flex items-center gap-2">
+              {onOpenAiSummarizer && (
+                <button
+                  onClick={() =>
+                    onOpenAiSummarizer(
+                      `Implementation Task: ${selectedTask.taskTitle}`,
+                      `Product: ${selectedTask.productName}\nMarket: ${selectedTask.market}\nOwner: ${selectedTask.affiliateOwner}\nDue: ${selectedTask.dueDate}\nStatus: ${selectedTask.status}\n\nDescription:\n${selectedTask.changeDescription}\n\nProofs Attached: ${selectedTask.proofs.length}`
+                    )
+                  }
+                  className="px-3 py-1.5 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold text-xs border border-purple-200 transition-colors flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  Summarize with AI
+                </button>
+              )}
+              <span className="px-3 py-1 rounded-full text-xs font-extrabold bg-slate-100 text-slate-800">
+                Due: {selectedTask.dueDate}
+              </span>
+            </div>
           </div>
 
           {/* Error and Success Banners */}
