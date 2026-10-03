@@ -19,7 +19,13 @@ import {
   Bell,
   User,
   LogOut,
-  Building2
+  Building2,
+  Download,
+  Cpu,
+  Award,
+  MessageSquare,
+  BarChart3,
+  Target
 } from 'lucide-react';
 import { CommandCenter } from './CommandCenter';
 import { ProductRegistry } from './ProductRegistry';
@@ -38,10 +44,11 @@ import { ActivityLogView } from './ActivityLogView';
 import { ComplianceAuditReport } from './ComplianceAuditReport';
 import { AgentSwarmOrchestration } from './AgentSwarmOrchestration';
 import { AiSummarizerDrawer } from './AiSummarizerDrawer';
+import { InfographicVisualDashboard } from './InfographicVisualDashboard';
+import { GoalInterpreterStudio } from './GoalInterpreterStudio';
 import { UserProfile, UserRole } from '../../types/canon';
 import { NotificationCenter } from '../layout/NotificationCenter';
 import { GlobalSearchBar } from '../layout/GlobalSearchBar';
-import { Cpu, Award, MessageSquare } from 'lucide-react';
 
 interface AppShellProps {
   onExitToPublic: () => void;
@@ -60,7 +67,17 @@ export const AppShell: React.FC<AppShellProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<string>(initialTab);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [isAiCopilotOpen, setIsAiCopilotOpen] = useState(false);
+  const [isAiSummarizerOpen, setIsAiSummarizerOpen] = useState(false);
+  const [aiContextTitle, setAiContextTitle] = useState('Section 4.4 Special Warnings & Precautions');
+  const [aiContextText, setAiContextText] = useState(
+    'KEYTRUDA Section 4.4 / 5.1 Special Warnings: Mandates baseline and periodic liver function monitoring (AST/ALT/bilirubin) before each infusion and introduces permanent discontinuation rule for Grade 3 or Grade 4 immune-mediated hepatitis.'
+  );
+
+  const handleOpenAiSummarizer = (title: string, text: string) => {
+    setAiContextTitle(title);
+    setAiContextText(text);
+    setIsAiSummarizerOpen(true);
+  };
 
   const handleRoleSwitch = (newRole: UserRole) => {
     const updated = { ...currentUser, role: newRole };
@@ -69,6 +86,8 @@ export const AppShell: React.FC<AppShellProps> = ({
 
   const navItems = [
     { id: 'dashboard', label: 'Command Center', icon: LayoutDashboard, badge: 'Live' },
+    { id: 'infographics', label: 'Infographic Dashboard', icon: BarChart3, badge: 'Visual' },
+    { id: 'goal-schema', label: 'Goal & Plan Schema', icon: Target, badge: 'Schema' },
     { id: 'activity-roles', label: 'Activity Log & Roles', icon: ShieldCheck, badge: 'RBAC' },
     { id: 'swarm', label: 'Multi-Agent AI Swarm', icon: Cpu, badge: 'HITL' },
     { id: 'compliance', label: 'Compliance Audit & Export', icon: Award, badge: 'Part 11' },
@@ -243,6 +262,16 @@ export const AppShell: React.FC<AppShellProps> = ({
               <Sparkles className="w-4 h-4" />
             </button>
 
+            {/* Quick Export Dossier Button */}
+            <button
+              onClick={() => setActiveTab('compliance')}
+              className="px-3.5 py-1.5 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 cursor-pointer"
+              title="Open Compliance & Audit Export Suite"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Export GxP Dossier</span>
+            </button>
+
             <button
               onClick={onExitToPublic}
               className="px-3.5 py-1.5 rounded-full bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-colors cursor-pointer"
@@ -265,15 +294,19 @@ export const AppShell: React.FC<AppShellProps> = ({
         </header>
 
         {/* Scrollable View Container */}
-        <main className="flex-1 overflow-y-auto p-6 sm:p-8">
+        <main className="flex-1 overflow-y-auto p-6 sm:p-8 relative">
           <div className="max-w-7xl mx-auto">
             {activeTab === 'dashboard' && <CommandCenter onNavigate={(tab) => setActiveTab(tab)} />}
+            {activeTab === 'infographics' && <InfographicVisualDashboard />}
+            {activeTab === 'goal-schema' && <GoalInterpreterStudio />}
             {activeTab === 'activity-roles' && (
               <ActivityLogView
                 currentRole={currentUser.role}
                 onSimulateRoleSwitch={handleRoleSwitch}
               />
             )}
+            {activeTab === 'swarm' && <AgentSwarmOrchestration />}
+            {activeTab === 'compliance' && <ComplianceAuditReport />}
             {activeTab === 'products' && (
               <ProductRegistry
                 onSelectVersionForDiff={() => setActiveTab('compare')}
@@ -284,20 +317,54 @@ export const AppShell: React.FC<AppShellProps> = ({
               <LabelIntake onIntakeComplete={() => setActiveTab('compare')} />
             )}
             {activeTab === 'compare' && (
-              <VersionComparison onRouteToReview={() => setActiveTab('reviews')} />
+              <VersionComparison
+                onRouteToReview={() => setActiveTab('reviews')}
+                onOpenAiSummarizer={handleOpenAiSummarizer}
+              />
             )}
             {activeTab === 'cross-market' && (
-              <CrossMarketMatrix onSelectAlignment={() => setActiveTab('compare')} />
+              <CrossMarketMatrix
+                onSelectAlignment={() => setActiveTab('compare')}
+                onOpenAiSummarizer={handleOpenAiSummarizer}
+              />
             )}
             {activeTab === 'signals' && <SignalIntake />}
             {activeTab === 'impact' && <ImpactGraph />}
-            {activeTab === 'reviews' && <HumanReviewQueue />}
+            {activeTab === 'reviews' && (
+              <HumanReviewQueue onOpenAiSummarizer={handleOpenAiSummarizer} />
+            )}
             {activeTab === 'tasks' && <ImplementationTracker />}
             {activeTab === 'structured' && <StructuredWorkbench />}
             {activeTab === 'provenance' && <ProvenanceReplay />}
             {activeTab === 'gemini' && <GeminiChatbot />}
             {activeTab === 'audit' && <AuditLogView />}
           </div>
+
+          {/* Floating AI Copilot & Summarizer Trigger */}
+          <button
+            onClick={() =>
+              handleOpenAiSummarizer(
+                `Active Screen Context (${navItems.find((n) => n.id === activeTab)?.label || 'Overview'})`,
+                `User is currently working in the "${navItems.find((n) => n.id === activeTab)?.label}" module for Keytruda (pembrolizumab) under role "${currentUser.role}". CCDS Rev 15 active harmonization.`
+              )
+            }
+            className="fixed bottom-6 right-6 z-40 px-4 py-2.5 rounded-full bg-slate-950 text-white border border-purple-500/50 shadow-2xl hover:shadow-purple-500/30 hover:scale-105 active:scale-95 transition-all flex items-center gap-2 cursor-pointer group"
+            title="Open AI Regulatory Copilot"
+          >
+            <span className="w-2 h-2 rounded-full bg-purple-400 animate-ping" />
+            <Sparkles className="w-4 h-4 text-purple-400 group-hover:rotate-12 transition-transform" />
+            <span className="text-xs font-bold bg-gradient-to-r from-purple-200 via-white to-emerald-200 bg-clip-text text-transparent">
+              AI Copilot & Summarizer
+            </span>
+          </button>
+
+          {/* AI Summarizer Drawer Component */}
+          <AiSummarizerDrawer
+            isOpen={isAiSummarizerOpen}
+            onClose={() => setIsAiSummarizerOpen(false)}
+            activeContextTitle={aiContextTitle}
+            activeContextText={aiContextText}
+          />
         </main>
       </div>
     </div>

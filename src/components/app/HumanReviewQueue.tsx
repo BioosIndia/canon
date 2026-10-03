@@ -15,8 +15,13 @@ import {
 import { MOCK_REVIEWS, CURRENT_USER } from '../../data/mockData';
 import { HumanReviewRecord, ReviewDecisionType, UserRole } from '../../types/canon';
 import { calculateSha256 } from '../../utils/diffEngine';
+import { Sparkles } from 'lucide-react';
 
-export const HumanReviewQueue: React.FC = () => {
+interface HumanReviewQueueProps {
+  onOpenAiSummarizer?: (title: string, text: string) => void;
+}
+
+export const HumanReviewQueue: React.FC<HumanReviewQueueProps> = ({ onOpenAiSummarizer }) => {
   const [reviews, setReviews] = useState<HumanReviewRecord[]>(MOCK_REVIEWS);
   const [selectedReview, setSelectedReview] = useState<HumanReviewRecord>(MOCK_REVIEWS[0]);
 
@@ -162,22 +167,39 @@ export const HumanReviewQueue: React.FC = () => {
 
         {/* Right Column (7 Cols): Decision Studio */}
         <div className="lg:col-span-7 bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-xs space-y-6">
-          <div className="pb-4 border-b border-slate-100">
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
-              Active Evaluation Candidate
-            </span>
-            <h2 className="text-lg font-bold text-slate-900 mt-1">{selectedReview.reviewTitle}</h2>
-            <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
-              <span className="px-2.5 py-0.5 rounded bg-slate-100 font-bold text-slate-800">
-                {selectedReview.productName}
+          <div className="pb-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
+                Active Evaluation Candidate
               </span>
-              <span className="px-2.5 py-0.5 rounded bg-blue-50 text-blue-800 font-medium">
-                {selectedReview.market}
-              </span>
-              <span className="px-2.5 py-0.5 rounded bg-purple-50 text-purple-800 font-medium">
-                Class: {selectedReview.candidateClass}
-              </span>
+              <h2 className="text-lg font-bold text-slate-900 mt-1">{selectedReview.reviewTitle}</h2>
+              <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+                <span className="px-2.5 py-0.5 rounded bg-slate-100 font-bold text-slate-800">
+                  {selectedReview.productName}
+                </span>
+                <span className="px-2.5 py-0.5 rounded bg-blue-50 text-blue-800 font-medium">
+                  {selectedReview.market}
+                </span>
+                <span className="px-2.5 py-0.5 rounded bg-purple-50 text-purple-800 font-medium">
+                  Class: {selectedReview.candidateClass}
+                </span>
+              </div>
             </div>
+
+            {onOpenAiSummarizer && (
+              <button
+                onClick={() =>
+                  onOpenAiSummarizer(
+                    `${selectedReview.productName} §${selectedReview.sectionCode} Review`,
+                    `Candidate Class: ${selectedReview.candidateClass}\nStatus: ${selectedReview.status}\nAssigned: ${selectedReview.assignedTo}\nReview Deadline: ${selectedReview.reviewDeadline}\n\nCandidate Details:\n${selectedReview.reviewTitle} for market ${selectedReview.market}.`
+                  )
+                }
+                className="px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 self-start cursor-pointer"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                Discuss with AI Assistant
+              </button>
+            )}
           </div>
 
           {/* Form Action Buttons */}

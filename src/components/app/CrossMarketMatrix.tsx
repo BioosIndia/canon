@@ -13,12 +13,14 @@ import {
 } from 'lucide-react';
 import { MOCK_CROSS_MARKET } from '../../data/mockData';
 import { AlignmentStatus, CrossMarketAlignment } from '../../types/canon';
+import { Sparkles } from 'lucide-react';
 
 interface CrossMarketMatrixProps {
   onSelectAlignment: (item: CrossMarketAlignment) => void;
+  onOpenAiSummarizer?: (title: string, text: string) => void;
 }
 
-export const CrossMarketMatrix: React.FC<CrossMarketMatrixProps> = ({ onSelectAlignment }) => {
+export const CrossMarketMatrix: React.FC<CrossMarketMatrixProps> = ({ onSelectAlignment, onOpenAiSummarizer }) => {
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -160,7 +162,23 @@ export const CrossMarketMatrix: React.FC<CrossMarketMatrixProps> = ({ onSelectAl
                     )}
                   </td>
                   <td className="py-4 px-6 text-slate-600 font-medium">{row.affiliateLead}</td>
-                  <td className="py-4 px-6 text-right">
+                  <td className="py-4 px-6 text-right space-x-2">
+                    {onOpenAiSummarizer && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onOpenAiSummarizer(
+                            `${row.market} - ${row.canonicalConcept} Alignment`,
+                            `Market: ${row.market}\nConcept: ${row.canonicalConcept}\nCore Version: ${row.coreVersion}\nLocal Version: ${row.localVersion}\nStatus: ${row.status}\n\nDifferences:\n${row.differencesSummary}${row.deviationReason ? `\n\nDeviation Reason:\n${row.deviationReason}` : ''}`
+                          );
+                        }}
+                        className="px-2.5 py-1.5 rounded-lg bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold text-xs transition-colors cursor-pointer inline-flex items-center gap-1 border border-purple-200"
+                        title="Discuss this cross-market discrepancy with AI"
+                      >
+                        <Sparkles className="w-3 h-3" />
+                        AI Summary
+                      </button>
+                    )}
                     <button
                       onClick={(e) => {
                         e.stopPropagation();

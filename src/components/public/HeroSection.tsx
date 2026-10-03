@@ -244,14 +244,14 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onLaunchApp, onSelectP
             onClick={() => setShow3DModel(!show3DModel)}
             className="px-5 py-3.5 rounded-full bg-emerald-950/70 hover:bg-emerald-900/90 text-emerald-200 font-semibold text-sm border border-emerald-700/50 backdrop-blur-sm transition-all flex items-center gap-2 cursor-pointer"
           >
-            <Cuboid className="w-4 h-4 text-emerald-400" />
-            {show3DModel ? 'Hide 3D Molecule' : 'Show 3D Molecule'}
+            <Cuboid className="w-4 h-4 text-[#D8F34E]" />
+            {show3DModel ? 'Hide 3D Molecular & Topology Model' : 'Explore 3D Molecular & Topology Model'}
           </button>
         </div>
 
-        {/* 3D Pharmaceutical Molecular Integrity Model Module */}
+        {/* 3D Pharmaceutical Molecular & Regulatory Structure Explorer Module */}
         {show3DModel && (
-          <div className="mt-10 max-w-4xl mx-auto">
+          <div className="mt-10 max-w-4xl mx-auto text-left">
             <Hero3DModel />
           </div>
         )}

@@ -2,5 +2,7 @@
   "name": "PRAMANEX CANON — Global Label Lifecycle OS",
   "description": "Enterprise labeling intelligence and global label lifecycle operating system with evidence-linked comparison, cross-market alignment, and human-governed reviews.",
   "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
 }

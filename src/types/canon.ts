@@ -269,3 +269,177 @@ export interface AuditEvent {
   details: string;
   severity: 'INFO' | 'WARNING' | 'CRITICAL_SECURITY';
 }
+
+// ==========================================
+// GOAL INTERPRETATION & BOUNDED PLANNER
+// ==========================================
+
+export type GoalRiskClass = 'LOW_INFORMATIONAL' | 'MEDIUM_VARIATION' | 'HIGH_SAFETY_CRITICAL';
+
+export interface GoalInterpretation {
+  goalId: string;
+  goalType:
+    | 'LABEL_COMPARISON'
+    | 'CROSS_MARKET_IMPACT'
+    | 'SAFETY_SIGNAL_TRIAGE'
+    | 'EPI_LINK_VERIFICATION'
+    | 'HISTORICAL_RECONSTRUCTION'
+    | 'AFFILIATE_DISPATCH'
+    | 'AUDIT_PACKAGE_GENERATION';
+  goalText: string;
+  tenantId: string;
+  workspaceId: string;
+  actorId: string;
+  actorRole: UserRole;
+  productId: string;
+  productName: string;
+  marketScope: string[];
+  labelVersionIds: string[];
+  requestedOutput: string;
+  requiredPermissions: string[];
+  riskClass: GoalRiskClass;
+  requiresPlanning: boolean;
+  requiresHumanReview: boolean;
+  createdAt: string;
+}
+
+export type PlanStepStatus = 'PENDING' | 'RUNNING' | 'COMPLETED' | 'BLOCKED' | 'FAILED' | 'SKIPPED';
+
+export interface PlanStep {
+  stepId: string;
+  sequence: number;
+  purpose: string;
+  inputRefs: string[];
+  requiredEvidence: string[];
+  requiredPermission: string;
+  toolOrSpecialist: string;
+  dependencyIds: string[];
+  expectedOutputSchema: string;
+  validationRule: string;
+  humanGate: boolean;
+  status: PlanStepStatus;
+  attemptCount: number;
+  startedAt?: string;
+  completedAt?: string;
+  failureReason?: string;
+}
+
+export type PlanTerminalState =
+  | 'INITIALIZED'
+  | 'IN_PROGRESS'
+  | 'COMPLETED'
+  | 'NEEDS_REVIEW'
+  | 'MISSING_EVIDENCE'
+  | 'IDENTITY_UNCERTAIN'
+  | 'UNKNOWN'
+  | 'CONFLICT'
+  | 'BLOCKED'
+  | 'FAILED'
+  | 'EXHAUSTED'
+  | 'HOLD'
+  | 'CANCELLED'
+  | 'SUPERSEDED';
+
+export type RePlanTrigger =
+  | 'SOURCE_FAILED'
+  | 'PARSER_FAILED'
+  | 'IDENTITY_AMBIGUOUS'
+  | 'VERSION_AMBIGUOUS'
+  | 'SECTION_ALIGNMENT_UNRESOLVED'
+  | 'MISSING_EVIDENCE'
+  | 'CONFLICT'
+  | 'MODEL_FAILED'
+  | 'TOOL_FAILED'
+  | 'SPECIALIST_DISAGREEMENT'
+  | 'HUMAN_REQUESTED_MORE_EVIDENCE'
+  | 'SOURCE_SUPERSEDED'
+  | 'SOURCE_CHANGED_AFTER_REVIEW';
+
+export interface BoundedPlan {
+  planId: string;
+  tenantId: string;
+  workspaceId: string;
+  goalId: string;
+  goalSummary: string;
+  planRevision: number;
+  status: PlanTerminalState;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+  sourceContext: {
+    productName: string;
+    sourceVersion: string;
+    targetVersion: string;
+    jurisdictions: string[];
+  };
+  requiredEvidence: string[];
+  evidenceUsed: string[];
+  evidenceMissing: string[];
+  steps: PlanStep[];
+  dependencies: Record<string, string[]>;
+  humanReviewPoints: string[];
+  allowedTools: string[];
+  allowedSpecialists: string[];
+  retryBudget: number;
+  timeBudgetMs: number;
+  costBudgetCents: number;
+  tokenBudget: number;
+  stopConditions: string[];
+  currentStepId?: string;
+  failureReason?: string;
+  supersededBy?: string;
+  rePlanHistory?: {
+    fromRevision: number;
+    toRevision: number;
+    trigger: RePlanTrigger;
+    rationale: string;
+    timestamp: string;
+  }[];
+}
+
+// ==========================================
+// GOVERNED AGENT MEMORY SUBSYSTEM
+// ==========================================
+
+export type MemoryClass =
+  | 'WORKING'
+  | 'EPISODIC'
+  | 'SEMANTIC_DOMAIN'
+  | 'ORGANIZATION'
+  | 'USER_SESSION';
+
+export type MemoryReviewStatus = 'APPROVED' | 'PROPOSED' | 'STALE' | 'SUPERSEDED' | 'INVALIDATED';
+
+export interface GovernedMemoryItem {
+  memoryId: string;
+  memoryType: MemoryClass;
+  tenantId: string;
+  workspaceId: string;
+  subjectType: 'PRODUCT' | 'CONCEPT_MAPPING' | 'TERMINOLOGY' | 'REVIEW_CORRECTION' | 'WORKFLOW_POLICY' | 'USER_STATE';
+  subjectId: string;
+  title: string;
+  content: Record<string, any>;
+  sourceRefs: string[];
+  sourceVersions: string[];
+  provenance: {
+    originator: string;
+    originatorType: 'SYSTEM' | 'AI_SPECIALIST' | 'NAMED_HUMAN';
+    signatureHash?: string;
+    authorityJurisdiction?: string;
+  };
+  createdBy: string;
+  createdAt: string;
+  currentRevision: number;
+  reviewStatus: MemoryReviewStatus;
+  freshnessScore: number; // 0.0 - 1.0
+  validFrom: string;
+  validUntil?: string;
+  retentionPolicy: string;
+  accessPolicy: {
+    allowedRoles: UserRole[];
+    requiresTenantIsolation: boolean;
+  };
+  supersededBy?: string;
+  invalidationReason?: string;
+}
+

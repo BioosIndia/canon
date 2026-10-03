@@ -22,9 +22,10 @@ import { DiffChunk } from '../../types/canon';
 
 interface VersionComparisonProps {
   onRouteToReview: (candidateId: string) => void;
+  onOpenAiSummarizer?: (title: string, text: string) => void;
 }
 
-export const VersionComparison: React.FC<VersionComparisonProps> = ({ onRouteToReview }) => {
+export const VersionComparison: React.FC<VersionComparisonProps> = ({ onRouteToReview, onOpenAiSummarizer }) => {
   const versionOld = MOCK_LABEL_VERSIONS[0]; // US PI v14.2
   const versionNew = MOCK_LABEL_VERSIONS[1]; // US PI v15.0
 
@@ -213,6 +214,20 @@ export const VersionComparison: React.FC<VersionComparisonProps> = ({ onRouteToR
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${isAnalyzing ? 'animate-spin' : ''}`} />
               </button>
+              {onOpenAiSummarizer && (
+                <button
+                  onClick={() =>
+                    onOpenAiSummarizer(
+                      `Section ${selectedSectionCode} (${oldSec.canonicalConcept}) Diff`,
+                      `Old Text (${versionOld.versionNumber}):\n${oldSec.content}\n\nNew Text (${versionNew.versionNumber}):\n${newSec.content}\n\nAutomated Candidate Evaluation:\n${aiResult.rationale}`
+                    )
+                  }
+                  className="px-2.5 py-1 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-[11px] font-bold transition-colors cursor-pointer flex items-center gap-1 shadow-xs"
+                >
+                  <Sparkles className="w-3 h-3" />
+                  Summarize with AI
+                </button>
+              )}
             </div>
           </div>
 

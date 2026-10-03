@@ -101,18 +101,34 @@ export const StorageService = {
     return getStoredItem<AuditEvent[]>(STORAGE_KEYS.AUDIT_LOGS, MOCK_AUDIT_EVENTS);
   },
 
-  logActivity(event: Omit<AuditEvent, 'id' | 'timestamp' | 'correlationId' | 'ipAddress'>): AuditEvent {
+  logActivity(
+    event: Omit<AuditEvent, 'id' | 'timestamp' | 'correlationId' | 'ipAddress'> & {
+      correlationId?: string;
+      ipAddress?: string;
+    }
+  ): AuditEvent {
     const existing = this.getAuditLogs();
     const newLog: AuditEvent = {
       id: `audit-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
       timestamp: new Date().toISOString(),
-      correlationId: `corr-tx-${Math.floor(1000 + Math.random() * 9000)}-${Date.now().toString(16).slice(-4)}`,
-      ipAddress: '192.168.1.104 (Authenticated Session)',
+      correlationId:
+        event.correlationId ||
+        `corr-tx-${Math.floor(1000 + Math.random() * 9000)}-${Date.now().toString(16).slice(-4)}`,
+      ipAddress: event.ipAddress || '192.168.1.104 (Authenticated Session)',
       ...event,
     };
     const updated = [newLog, ...existing];
     setStoredItem(STORAGE_KEYS.AUDIT_LOGS, updated);
     return newLog;
+  },
+
+  logAudit(
+    event: Omit<AuditEvent, 'id' | 'timestamp' | 'correlationId' | 'ipAddress'> & {
+      correlationId?: string;
+      ipAddress?: string;
+    }
+  ): AuditEvent {
+    return this.logActivity(event);
   },
 
   getLabelVersions(): LabelVersion[] {

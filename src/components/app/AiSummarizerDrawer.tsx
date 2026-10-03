@@ -29,6 +29,7 @@ export const AiSummarizerDrawer: React.FC<AiSummarizerDrawerProps> = ({
   activeContextText = 'KEYTRUDA Section 4.4 / 5.1 Special Warnings: Mandates baseline and periodic liver function monitoring (AST/ALT/bilirubin) before each infusion and introduces permanent discontinuation rule for Grade 3 or Grade 4 immune-mediated hepatitis.',
   activeContextTitle = 'Section 4.4 Warnings Harmonization',
 }) => {
+  const [selectedModel, setSelectedModel] = useState<'gemini-3.1-flash-lite' | 'gemini-3.5-flash' | 'gemini-3.8-flash'>('gemini-3.1-flash-lite');
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: 'init-msg',
@@ -38,6 +39,20 @@ export const AiSummarizerDrawer: React.FC<AiSummarizerDrawerProps> = ({
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     },
   ]);
+
+  useEffect(() => {
+    if (activeContextTitle) {
+      setMessages([
+        {
+          id: `anchor-${Date.now()}`,
+          sender: 'assistant',
+          roleLabel: `CANON Regulatory AI (${selectedModel})`,
+          content: `⚡ Anchored to focus context: "${activeContextTitle}"\n\nExcerpt:\n"${activeContextText.substring(0, 220)}${activeContextText.length > 220 ? '...' : ''}"\n\nHow can I help analyze or summarize this point? You can ask a question or click a quick action below.`,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        },
+      ]);
+    }
+  }, [activeContextTitle, activeContextText]);
 
   const [inputQuery, setInputQuery] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -134,6 +149,26 @@ export const AiSummarizerDrawer: React.FC<AiSummarizerDrawerProps> = ({
         >
           <X className="w-4 h-4" />
         </button>
+      </div>
+
+      {/* Model Selection Bar */}
+      <div className="px-4 py-2 bg-slate-950 text-white flex items-center justify-between gap-2 text-[10px] border-b border-white/10">
+        <span className="text-slate-400 font-bold uppercase tracking-wider">Model:</span>
+        <div className="flex items-center gap-1.5">
+          {(['gemini-3.1-flash-lite', 'gemini-3.5-flash', 'gemini-3.8-flash'] as const).map((m) => (
+            <button
+              key={m}
+              onClick={() => setSelectedModel(m)}
+              className={`px-2 py-0.5 rounded-md font-mono font-medium transition-colors cursor-pointer ${
+                selectedModel === m
+                  ? 'bg-purple-600 text-white font-bold'
+                  : 'bg-white/10 text-slate-300 hover:bg-white/20'
+              }`}
+            >
+              {m.replace('gemini-', '')}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Context Snippet Pill */}
